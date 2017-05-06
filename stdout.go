@@ -3,38 +3,34 @@ package stdout
 import (
 	"fmt"
 
-	"github.com/lfkeitel/spartan/codecs"
-	"github.com/lfkeitel/spartan/config"
-	"github.com/lfkeitel/spartan/event"
-	"github.com/lfkeitel/spartan/outputs"
-	"github.com/lfkeitel/spartan/utils"
+	"github.com/spartanlogs/spartan/codecs"
+	"github.com/spartanlogs/spartan/config"
+	"github.com/spartanlogs/spartan/event"
+	"github.com/spartanlogs/spartan/outputs"
+	"github.com/spartanlogs/spartan/utils"
 )
 
 func init() {
 	outputs.Register("stdout", newStdOutOutput)
 }
 
-type stdOutConfig struct {
-	codec codecs.Codec
-}
-
 var stdOutConfigSchema = []config.Setting{
 	{
 		Name:    "codec",
 		Type:    config.String,
-		Default: "json",
+		Default: "lines",
 	},
 }
 
 // StdOutOutput prints events to StdOut.
 type StdOutOutput struct {
-	config *stdOutConfig
-	next   outputs.Output
+	next  outputs.Output
+	codec codecs.Codec
 }
 
 func newStdOutOutput(options utils.InterfaceMap) (outputs.Output, error) {
 	options = config.CheckOptionsMap(options)
-	o := &StdOutOutput{config: &stdOutConfig{}}
+	o := &StdOutOutput{}
 	if err := o.setConfig(options); err != nil {
 		return nil, err
 	}
@@ -46,9 +42,7 @@ func (o *StdOutOutput) setConfig(options utils.InterfaceMap) error {
 		return err
 	}
 
-	codec := options.Get("codec").(string)
-	c, _ := codecs.New(codec)
-	o.config.codec = c
+	options.Set("codec", options.Get("codec").(string))
 
 	return nil
 }
@@ -58,12 +52,18 @@ func (o *StdOutOutput) SetNext(next outputs.Output) {
 	o.next = next
 }
 
+// SetCodec sets the codec
+func (o *StdOutOutput) SetCodec(c codecs.Codec) {
+	o.codec = c
+}
+
 // Run processes a batch.
 func (o *StdOutOutput) Run(batch []*event.Event) {
 	for _, event := range batch {
 		if event != nil {
-			fmt.Printf("%s\n", o.config.codec.Encode(event))
+			fmt.Print(string(o.codec.Encode(event)))
 		}
 	}
 	o.next.Run(batch)
 }
+
