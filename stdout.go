@@ -38,7 +38,9 @@ func newStdOutOutput(options utils.InterfaceMap) (outputs.Output, error) {
 }
 
 func (o *StdOutOutput) setConfig(options utils.InterfaceMap) error {
-	if err := config.VerifySettings(options, stdOutConfigSchema); err != nil {
+	var err error
+	options, err = config.VerifySettings(options, stdOutConfigSchema)
+	if err != nil {
 		return err
 	}
 
@@ -66,4 +68,3 @@ func (o *StdOutOutput) Run(batch []*event.Event) {
 	}
 	o.next.Run(batch)
 }
-
