@@ -3,7 +3,6 @@ package stdout
 import (
 	"fmt"
 
-	"github.com/spartanlogs/spartan/codecs"
 	"github.com/spartanlogs/spartan/config"
 	"github.com/spartanlogs/spartan/event"
 	"github.com/spartanlogs/spartan/outputs"
@@ -24,8 +23,7 @@ var stdOutConfigSchema = []config.Setting{
 
 // StdOutOutput prints events to StdOut.
 type StdOutOutput struct {
-	next  outputs.Output
-	codec codecs.Codec
+	outputs.BaseOutput
 }
 
 func newStdOutOutput(options utils.InterfaceMap) (outputs.Output, error) {
@@ -49,22 +47,12 @@ func (o *StdOutOutput) setConfig(options utils.InterfaceMap) error {
 	return nil
 }
 
-// SetNext sets the next Output in line.
-func (o *StdOutOutput) SetNext(next outputs.Output) {
-	o.next = next
-}
-
-// SetCodec sets the codec
-func (o *StdOutOutput) SetCodec(c codecs.Codec) {
-	o.codec = c
-}
-
 // Run processes a batch.
 func (o *StdOutOutput) Run(batch []*event.Event) {
 	for _, event := range batch {
 		if event != nil {
-			fmt.Print(string(o.codec.Encode(event)))
+			fmt.Print(string(o.Codec.Encode(event)))
 		}
 	}
-	o.next.Run(batch)
+	o.Next.Run(batch)
 }
